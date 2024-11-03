@@ -1,0 +1,52 @@
+<html>
+<head>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;700&display=swap');
+        body {
+            font-family: 'Roboto Mono', monospace;
+        }
+        .icon:hover {
+            transform: scale(1.2);
+            transition: transform 0.2s;
+        }
+        .active {
+            background-color: #536c6d; /* Darker blue background */
+            color: #d9e1ea; /* Light blue color for active icon */
+            padding: 0.5rem;
+            border-radius: 0.5rem;
+        }
+    </style>
+</head>
+<body class="bg-white text-gray-800">
+    <div class="flex">
+        <!-- Sidebar -->
+        <div class="bg-gray-800 text-white w-16 flex flex-col items-center justify-center space-y-4 h-screen">
+            <i class="fas fa-home text-2xl icon"></i>
+            <div class="active">
+                <i class="fas fa-flag text-2xl icon"></i>
+            </div> 
+            <i class="fas fa-chart-line text-2xl icon"></i>
+            <i class="fas fa-user text-2xl icon"></i>
+        </div>
+        <!-- Main Content -->
+        <div class="flex-1 p-8">
+            <h1 class="text-4xl font-bold">
+                <span class="text-red-600">&gt;$</span>RootME
+            </h1>
+            <div class="mt-8 space-y-4">
+                <div class="bg-gray-100 p-4 rounded">
+                    <p class="text-lg text-gray-700">&gt; Loren ipsum Santiago los santos baaaa akkakak 111 alalalallala</p>
+                </div>
+                <div class="bg-gray-100 p-4 rounded">
+                    <p class="text-lg text-gray-700">&gt; Loren ipsum Santiago los santos baaaa akkakak 111 alalalallala</p>
+                </div>
+                <div class="bg-gray-100 p-4 rounded">
+                    <p class="text-lg text-gray-700">&gt; Loren ipsum Santiago los santos baaaa akkakak 111 alalalallala</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
