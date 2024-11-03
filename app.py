@@ -3,7 +3,7 @@ from flask_jwt_extended import JWTManager, jwt_required, create_access_token, ge
 from models.user import  UserModel
 import os
 from datetime import timedelta
-
+import hashlib
 
 app =  Flask(__name__)
 app.config['JWT_SECRET_KEY'] = os.environ.get('JWT_SECRET_KEY', 'peduliapagwbjirwkwkakujugamalas!@^^*!******00012839')
@@ -20,12 +20,18 @@ DB_CONFIG = {
 
 user_model = UserModel(DB_CONFIG)
 
+
+def md5encrypt(string):
+    plain = string
+    return hashlib.md5(plain.encode()).hexdigest()
+
 @app.route('/register', methods=['POST'])
 def register():
     try:
         data = request.get_json()
         username = data.get('username')
         password = data.get('password')
+        password =  md5encrypt(password)
         mail = data.get('mail')
         
         return user_model.create_user(username, password, mail)
