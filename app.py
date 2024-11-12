@@ -1,11 +1,11 @@
 from flask import Flask, request, jsonify, make_response, redirect, render_template
 from flask_jwt_extended import JWTManager, jwt_required, create_access_token, get_jwt_identity, set_access_cookies, get_jwt, verify_jwt_in_request
 from models.user import UserModel
-from models.soal import SoalModel
 import os
 from datetime import timedelta
 import hashlib
 from functools import wraps
+from recovery import send_reset_email, generate_reset_link, verify_reset_token
 
 app = Flask(__name__)
 app.config['JWT_SECRET_KEY'] = os.environ.get('JWT_SECRET_KEY', 'peduliapagwbjirwkwkakujugamalas!@^^*!******00012839')
@@ -23,7 +23,6 @@ DB_CONFIG = {
 }
 
 user_model = UserModel(DB_CONFIG)
-soal_model = SoalModel(DB_CONFIG)
 
 def jwt_cookie_required():
     def wrapper(fn):
@@ -127,10 +126,37 @@ def create_soal():
         koneksi_info = request.form.get('koneksi_info')
         value = request.form.get('value')
         
-        result = soal_model.create_soal(kategori_id, soal_name, soal_isi, attachment, koneksi_info, value)
+        result = user_model._model.create_soal(kategori_id, soal_name, soal_isi, attachment, koneksi_info, value)
         return jsonify(result)
     except Exception as e:
         return jsonify({"message": "Failed to create soal", "error": str(e), "status": "failed"}), 400
+
+@app.route('/request_reset', methods=['POST'])
+@jwt_cookie_required()
+def request_reset():
+    try:
+        email = request.form.get('email')
+        reset_link = generate_reset_link(email)
+        result = send_reset_email(email, reset_link)
+        return jsonify(result)
+    except Exception as e:
+        return jsonify({"message": "Failed to request password reset", "error": str(e), "status": "failed"}), 400
+
+@app.route('/reset_password/<token>', methods=['GET', 'POST'])
+def reset_password(token):
+    if request.method == 'GET':
+        return render_template('reset_password.html', token=token)
+    try:
+        email = verify_reset_token(token)
+        if not email:
+            return jsonify({"message": "Invalid or expired token", "status": "failed"}), 400
+        
+        new_password = request.form.get('password')
+        new_password = md5encrypt(new_password)
+        user_model.change_pass(email, new_password)
+        return jsonify({"message": "Password reset successful", "status": "success"})
+    except Exception as e:
+        return jsonify({"message": "Failed to reset password", "error": str(e), "status": "failed"}), 400
 
 if __name__ == '__main__':
     app.run(debug=False)

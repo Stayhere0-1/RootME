@@ -27,7 +27,7 @@ class UserModel:
             if conn:
                 conn.close()
 
-    def create_user(self, username, password, mail, role="Admin"):
+    def create_user(self, username, password, mail, role="Player"):
         conn = None
         cursor = None
         try:
@@ -144,3 +144,166 @@ class UserModel:
                     cursor.close()
                 if conn:
                     conn.close()
+
+    def edit_soal(self, kategori_id, soal_name, soal_isi,attachment, koneksi_info, value, soal_id):
+        try:
+            conn = self.db.get_con()
+            cursor = conn.cursor()
+            query = """
+            UPDATE soal
+            SET Kategori_id = %s, Soal_name = %s, Soal_Isi = %s, Attachment = %s, Koneksi_Info = %s, Value = %s
+            WHERE id = %s
+            """
+            cursor.execute(query, (kategori_id, soal_name, soal_isi, attachment, koneksi_info, value, soal_id))
+            conn.commit()
+            return {"message": "Soal updated successfully", "status": "success"}
+        except mysql.connector.Error as err:
+            return {"message": "Failed to update soal", "error": str(err), "status": "failed"}
+        finally:
+            if cursor:
+                cursor.close()
+            if conn:    
+                conn.close()
+
+    def delete_soal(self, soal_id):
+        try:
+            conn = self.db.get_con()
+            cursor = conn.cursor()
+            query = "DELETE FROM soal WHERE id = %s"
+            cursor.execute(query, (soal_id,))
+            conn.commit()
+            return {"message": "Soal deleted successfully", "status": "success"}
+        except mysql.connector.Error as err:
+            return {"message": "Failed to delete soal", "error": str(err), "status": "failed"}
+        finally:
+            if cursor:
+                cursor.close()
+            if conn:
+                conn.close()
+    
+    def change_username(self, user_id, new_username):
+        conn = None
+        cursor = None
+        try:
+            conn = self.db.get_con()
+            cursor = conn.cursor()
+            
+            if self.username_exist(new_username):
+                return jsonify({
+                    "message": "Username already exists",
+                    "status": "failed"
+                }), 409
+            
+            query = "UPDATE User SET username = %s WHERE id = %s"
+            cursor.execute(query, (new_username, user_id))
+            conn.commit()
+            
+            return jsonify({
+                "message": "Username updated successfully",
+                "status": "success"
+            }), 200
+        
+        #DEBUG DEFAULT:)
+        except mysql.connector.Error as e:
+            if conn:
+                conn.rollback()
+            return jsonify({
+                "message": "Database error",
+                "error": str(e),
+                "status": "failed"
+            }), 500
+        except Exception as e:
+            if conn:
+                conn.rollback()
+            return jsonify({
+                "message": "Unexpected error",
+                "error": str(e),
+                "status": "failed"
+            }), 500
+        finally:
+            if cursor:
+                cursor.close()
+            if conn:
+                conn.close()
+    
+    #GET MAIL from DATABASE baseon Username
+    def get_mail(self, username):
+        conn = None
+        cursor = None
+        try:
+            conn = self.db.get_con()
+            cursor = conn.cursor(buffered=True)
+            
+            query = "SELECT mail FROM User WHERE username = %s"
+            cursor.execute(query, (username,))
+            row = cursor.fetchone()
+            
+            if row:
+                return {
+                    "status": "success",
+                    "mail": row[0]
+                }, 200
+            else:
+                return {
+                    "status": "failed",
+                    "message": "User not found"
+                }, 404
+
+        except mysql.connector.Error as e:
+            return {
+                "status": "failed",
+                "message": "Database error",
+                "error": str(e)
+            }, 500
+        except Exception as e:
+            return {
+                "status": "failed",
+                "message": "Unexpected error",
+                "error": str(e)
+            }, 500
+        finally:
+            if cursor:
+                cursor.close()
+            if conn:
+                conn.close()
+                
+    def change_pass(self, mail, new_pass):
+        print("MAIL:",mail)
+        conn = None
+        cursor = None
+        try:
+            conn = self.db.get_con()
+            cursor = conn.cursor()
+            
+            
+            query = "UPDATE User SET password_md5 = %s WHERE mail = %s"
+            cursor.execute(query, (new_pass,mail ))
+            conn.commit()
+            
+            return jsonify({
+                "message": "Password updated successfully",
+                "status": "success"
+            }), 200
+        
+        #DEBUG DEFAULT:)
+        except mysql.connector.Error as e:
+            if conn:
+                conn.rollback()
+            return jsonify({
+                "message": "Database error",
+                "error": str(e),
+                "status": "failed"
+            }), 500
+        except Exception as e:
+            if conn:
+                conn.rollback()
+            return jsonify({
+                "message": "Unexpected error",
+                "error": str(e),
+                "status": "failed"
+            }), 500
+        finally:
+            if cursor:
+                cursor.close()
+            if conn:
+                conn.close()
