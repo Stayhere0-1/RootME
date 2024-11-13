@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Submit Flag</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>Submit Flag</h1>
+        <form action="/submit_flag" method="post">
+            <div class="form-group">
+                <label for="flag">Flag:</label>
+                <input type="text" id="flag" name="flag" required>
+                <label for="soal_id">soal_id:</label>
+                <input type="text" id="soal_id" name="soal_id" required>
+            </div>
+            <button type="submit">Submit</button>
+        </form>
+    </div>
+</body>
+</html>

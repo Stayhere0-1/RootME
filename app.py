@@ -76,6 +76,7 @@ def login():
             print("WOI")
             return response
         else:
+            print(result)
             print("MBUT")
             return render_template('login.html', message=result.get('message'), status="failed")
         
@@ -115,20 +116,28 @@ def logout():
     unset_jwt_cookies(response)
     return response, 200
 
-@app.route('/create_soal', methods=['POST'])
+@app.route('/create_soal', methods=['POST', 'GET'])
 @jwt_cookie_required()
 def create_soal():
+    if request.method == 'GET':
+        return render_template('create_soal.html')
     try:
-        kategori_id = request.form.get('kategori_id')
+        kategori_name = request.form.get('kategori_id')
         soal_name = request.form.get('soal_name')
         soal_isi = request.form.get('soal_isi')
         attachment = request.form.get('attachment')
         koneksi_info = request.form.get('koneksi_info')
         value = request.form.get('value')
-        
-        result = user_model._model.create_soal(kategori_id, soal_name, soal_isi, attachment, koneksi_info, value)
+        kategori_id = user_model.get_kategori_id(kategori_name)
+        flag = request.form.get("flag")
+        value = int(value)
+        print(f"kategori_id: {kategori_id}, soal_name: {soal_name}, soal_isi: {soal_isi}, attachment: {attachment}, koneksi_info: {koneksi_info}, value: {value}, flag: {flag}")
+        result = user_model.create_soal(kategori_id, soal_name, soal_isi, attachment, koneksi_info, value,flag)
+        print(result)
         return jsonify(result)
+    
     except Exception as e:
+        print(e)
         return jsonify({"message": "Failed to create soal", "error": str(e), "status": "failed"}), 400
 
 @app.route('/request_reset', methods=['POST'])
@@ -157,6 +166,114 @@ def reset_password(token):
         return jsonify({"message": "Password reset successful", "status": "success"})
     except Exception as e:
         return jsonify({"message": "Failed to reset password", "error": str(e), "status": "failed"}), 400
+
+@app.route('/change_username', methods=['POST','GET'])
+@jwt_cookie_required()
+def change_username():
+    try:
+        new_username = request.form.get('new_username')
+        claims = get_jwt()
+        user_now = claims.get('username')
+        
+        result = user_model.change_username(user_now, new_username)
+        return jsonify(result)
+    except Exception as e:
+        return jsonify({"message": "Failed to change username", "error": str(e), "status": "failed"}), 400
+
+@app.route('/submit_flag', methods=['POST', 'GET'])
+@jwt_cookie_required()
+def submit_flag():
+    if request.method == 'GET':
+        return render_template('submit_flag.html')
+    try:
+        claims = get_jwt()
+        username = claims.get('username')
+        user_id = user_model.get_user_id(username)
+        soal_id = request.form.get('soal_id')
+        flag = request.form.get('flag')
+        
+        result, status_code = user_model.submit_flag(user_id, soal_id, flag)
+        return jsonify(result), status_code
+    except Exception as e:
+        return jsonify({"message": "Failed to submit flag", "error": str(e), "status": "failed"}), 400
+
+@app.route('/leaderboard', methods=['GET'])
+def leaderboard():
+    try:
+        result, status_code = user_model.get_leaderboard()
+        return jsonify(result), status_code
+    except Exception as e:
+        return jsonify({"message": "Failed to fetch leaderboard", "error": str(e), "status": "failed"}), 400
+
+@app.route('/get_mail', methods=['GET'])
+@jwt_cookie_required()
+def get_mail():
+    try:
+        claims = get_jwt()
+        username = claims.get('username')
+        
+        result, status_code = user_model.get_mail(username)
+        return jsonify(result), status_code
+    except Exception as e:
+        return jsonify({"message": "Failed to get mail", "error": str(e), "status": "failed"}), 400
+
+@app.route('/change_pass', methods=['POST'])
+@jwt_cookie_required()
+def change_pass():
+    try:
+        claims = get_jwt()
+        username = claims.get('username')
+        mail = user_model.get_mail(username)['mail']
+        new_pass = request.form.get('new_pass')
+        new_pass = md5encrypt(new_pass)
+        
+        result, status_code = user_model.change_pass(mail, new_pass)
+        return jsonify(result), status_code
+    except Exception as e:
+        return jsonify({"message": "Failed to change password", "error": str(e), "status": "failed"}), 400
+
+@app.route('/edit_soal', methods=['POST'])
+@jwt_cookie_required()
+def edit_soal():
+    try:
+        kategori_id = request.form.get('kategori_id')
+        soal_name = request.form.get('soal_name')
+        soal_isi = request.form.get('soal_isi')
+        attachment = request.form.get('attachment')
+        koneksi_info = request.form.get('koneksi_info')
+        value = request.form.get('value')
+        flag = request.form.get('flag')
+        soal_id = request.form.get('soal_id')
+        
+        result = user_model.edit_soal(kategori_id, soal_name, soal_isi, attachment, koneksi_info, value, flag, soal_id)
+        return jsonify(result)
+    except Exception as e:
+        return jsonify({"message": "Failed to edit soal", "error": str(e), "status": "failed"}), 400
+
+@app.route('/delete_soal', methods=['POST'])
+@jwt_cookie_required()
+def delete_soal():
+    try:
+        soal_id = request.form.get('soal_id')
+        
+        result = user_model.delete_soal(soal_id)
+        return jsonify(result)
+    except Exception as e:
+        return jsonify({"message": "Failed to delete soal", "error": str(e), "status": "failed"}), 400
+
+@app.route('/get_kategori_id', methods=['GET'])
+@jwt_cookie_required()
+def get_kategori_id():
+    try:
+        kategori_name = request.args.get('kategori_name')
+        kategori_id = user_model.get_kategori_id(kategori_name)
+        
+        if kategori_id:
+            return jsonify({"status": "success", "kategori_id": kategori_id}), 200
+        else:
+            return jsonify({"status": "failed", "message": "Kategori not found"}), 404
+    except Exception as e:
+        return jsonify({"message": "Failed to get Kategori_id", "error": str(e), "status": "failed"}), 400
 
 if __name__ == '__main__':
     app.run(debug=False)
