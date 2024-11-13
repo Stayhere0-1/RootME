@@ -11,7 +11,7 @@ SMTP_USERNAME = ''
 SMTP_PASSWORD = ''
 SECRET_KEY = os.environ.get('AKU', 'default_secret_key')
 
-# Ensure SECRET_KEY is not None or empty
+# Debug
 if not SECRET_KEY:
     raise ValueError("No SECRET_KEY set for Flask application")
 
